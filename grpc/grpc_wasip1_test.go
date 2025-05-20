@@ -8,10 +8,11 @@ import (
 	"net"
 	"testing"
 
-	pb "github.com/stealthrocket/net/grpc"
-	"github.com/stealthrocket/net/wasip1"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
+
+	pb "github.com/goccy/go-wasi-net/grpc"
+	"github.com/goccy/go-wasi-net/wasip1"
 )
 
 type helloService struct {

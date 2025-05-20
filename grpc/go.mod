@@ -1,9 +1,9 @@
-module github.com/stealthrocket/net/grpc
+module github.com/goccy/go-wasi-net/grpc
 
 go 1.21
 
 require (
-	github.com/stealthrocket/net v0.2.1
+	github.com/goccy/go-wasi-net v0.2.1
 	google.golang.org/grpc v1.56.3
 	google.golang.org/protobuf v1.33.0
 )

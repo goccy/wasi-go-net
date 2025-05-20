@@ -1,13 +1,9 @@
-[![Build](https://github.com/stealthrocket/net/actions/workflows/build.yml/badge.svg)](https://github.com/stealthrocket/net/actions/workflows/build.yml)
-[![Go Reference](https://pkg.go.dev/badge/github.com/stealthrocket/net.svg)](https://pkg.go.dev/github.com/stealthrocket/net)
+[![Build](https://github.com/goccy/go-wasi-net/actions/workflows/build.yml/badge.svg)](https://github.com/goccy/go-wasi-net/actions/workflows/build.yml)
+[![Go Reference](https://pkg.go.dev/badge/github.com/goccy/go-wasi-net.svg)](https://pkg.go.dev/github.com/goccy/go-wasi-net)
 [![Apache 2 License](https://img.shields.io/badge/license-Apache%202-blue.svg)](LICENSE)
 
 > ![IMPORTANT]
-> This project is a fork of github.com/stealthrocket/net. To use it, you need to add a replace directive to your go.mod by the following command.
-
-```
-go mod edit -replace github.com/stealthrocket/net=github.com/goccy/wasi-go-net@main
-```
+> This project is a fork of github.com/stealthrocket/net.
 
 # net
 
@@ -45,10 +41,10 @@ network stack via `init` functions called on package imports. This model is
 currently supported for `http` and `mysql` with those imports:
 
 ```go
-import _ "github.com/stealthrocket/net/http"
+import _ "github.com/goccy/go-wasi-net/http"
 ```
 ```go
-import _ "github.com/stealthrocket/net/mysql"
+import _ "github.com/goccy/go-wasi-net/mysql"
 ```
 
 When imported, those packages alter the default configuration to install a
@@ -88,7 +84,7 @@ first constructing a listener and passing it to the server's `Serve` method:
 import (
     "net/http"
 
-    "github.com/stealthrocket/net/wasip1"
+    "github.com/goccy/go-wasi-net/wasip1"
 )
 
 func main() {
@@ -120,7 +116,7 @@ The pure Go name resolver is the default for `GOOS=wasip1`.
 All you need is the following import somewhere in your application:
 
 ```go
-import _ "github.com/stealthrocket/net/wasip1"
+import _ "github.com/goccy/go-wasi-net/wasip1"
 ```
 
 The library will then automatically configure the `net.DefaultResolver`.

@@ -10,7 +10,7 @@ test: proto wasirun $(packages.test)
 	@for pkg in $(packages.test); do \
 		tmp=$$(mktemp); \
 		$(wasirun) --dir=/ --dns-server=127.0.0.1:5453 $$pkg > $$tmp; \
-		if (($$?)); then cat $$tmp; exit 1; else printf "ok\tgithub.com/stealthrocket/net/$$pkg\n"; fi \
+		if (($$?)); then cat $$tmp; exit 1; else printf "ok\tgithub.com/goccy/go-wasi-net/$$pkg\n"; fi \
 	done
 
 # go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.28

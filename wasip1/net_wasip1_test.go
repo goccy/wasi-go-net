@@ -8,8 +8,9 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/stealthrocket/net/wasip1"
 	"golang.org/x/net/nettest"
+
+	"github.com/goccy/go-wasi-net/wasip1"
 )
 
 func TestConn(t *testing.T) {
