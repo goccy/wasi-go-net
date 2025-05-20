@@ -127,13 +127,3 @@ The library will then automatically configure the `net.DefaultResolver`.
 
 You'll then be able to use the lookup functions from the standard
 library (e.g. `net.LookupIP(host)`).
-
-### getaddrinfo
-
-The `sock_getaddrinfo` host function is used to implement name resolution.
-To use this method, compile the library with the `getaddrinfo` build tag.
-
-When using this method, the standard library resolver **will not work**; you
-cannot use `net.DefaultResolver`, `net.LookupIP`, etc.
-
-Note that `sock_getaddrinfo` may block.
