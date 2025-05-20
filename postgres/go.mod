@@ -3,8 +3,8 @@ module github.com/goccy/wasi-go-net/postgres
 go 1.21
 
 require (
-	github.com/jackc/pgx/v5 v5.5.4
 	github.com/goccy/wasi-go-net v0.1.1
+	github.com/jackc/pgx/v5 v5.5.4
 )
 
 require (

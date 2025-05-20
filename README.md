@@ -2,7 +2,7 @@
 [![Go Reference](https://pkg.go.dev/badge/github.com/goccy/wasi-go-net.svg)](https://pkg.go.dev/github.com/goccy/wasi-go-net)
 [![Apache 2 License](https://img.shields.io/badge/license-Apache%202-blue.svg)](LICENSE)
 
-> ![IMPORTANT]
+> [!IMPORTANT]
 > This project is a fork of github.com/stealthrocket/net.
 
 # net

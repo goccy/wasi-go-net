@@ -3,8 +3,8 @@ module github.com/goccy/wasi-go-net/redis
 go 1.21
 
 require (
-	github.com/redis/go-redis/v9 v9.0.5
 	github.com/goccy/wasi-go-net v0.1.1
+	github.com/redis/go-redis/v9 v9.0.5
 )
 
 require (

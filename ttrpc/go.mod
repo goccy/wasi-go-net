@@ -4,7 +4,7 @@ go 1.21
 
 require (
 	github.com/containerd/ttrpc v1.2.2
-	github.com/goccy/wasi-go-net v0.1.0
+	github.com/goccy/wasi-go-net v0.1.1
 	google.golang.org/protobuf v1.33.0
 )
 

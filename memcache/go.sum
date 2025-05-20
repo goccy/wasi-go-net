@@ -1,7 +1,6 @@
 github.com/bradfitz/gomemcache v0.0.0-20230611145640-acc696258285 h1:Dr+ezPI5ivhMn/3WOoB86XzMhie146DNaBbhaQWZHMY=
 github.com/bradfitz/gomemcache v0.0.0-20230611145640-acc696258285/go.mod h1:H0wQNHz2YrLsuXOZozoeDmnHXkNCRmMW0gwFWDfEZDA=
-github.com/mar4uk/gomemcache v0.0.0-20221107102512-3adaeb8afff3 h1:fODuxBhkSmNhMOD8faRXsUvoYG5rAijY4YYoOEdsXeY=
-github.com/mar4uk/gomemcache v0.0.0-20221107102512-3adaeb8afff3/go.mod h1:H0wQNHz2YrLsuXOZozoeDmnHXkNCRmMW0gwFWDfEZDA=
-github.com/stealthrocket/net v0.1.2 h1:fxglKhsGrBKMQHiEZuiP2jKyg2WaledYi/G7ijaoAOQ=
-github.com/stealthrocket/net v0.1.2/go.mod h1:9a0HqAOSQobNQt/QNqbIFMZzxOOwOrXU+XxXyeiu98o=
-golang.org/x/net v0.10.0 h1:X2//UzNDwYmtCLn7To6G58Wr6f5ahEAQgKNzv9Y951M=
+github.com/goccy/wasi-go-net v0.1.1 h1:UJyxop700HJKyc4BeHRZsTD8Sg3dV8zbycOt0Yv+Ufg=
+github.com/goccy/wasi-go-net v0.1.1/go.mod h1:VTPct7C8xxkd98lZcnaJ5pqYFp8DXhT+4rUjjH4uoKg=
+golang.org/x/net v0.23.0 h1:7EYJ93RZ9vYSZAIb2x3lnuvqO5zneoD6IvWjuhfxjTs=
+golang.org/x/net v0.23.0/go.mod h1:JKghWKKOSdJwpW2GEx0Ja7fmaKnMsbu+MWVZTokSYmg=
