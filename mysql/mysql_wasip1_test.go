@@ -7,8 +7,8 @@ import (
 	"testing"
 
 	// Importing this package configures go-sql-driver/mysql to use the dialer
-	// from github.com/stealthrocket/net/wasip1.
-	_ "github.com/stealthrocket/net/mysql"
+	// from github.com/goccy/go-wasi-net/wasip1.
+	_ "github.com/goccy/go-wasi-net/mysql"
 )
 
 func TestMySQL(t *testing.T) {

@@ -9,9 +9,10 @@ import (
 	"strings"
 	"testing"
 
-	_ "github.com/stealthrocket/net/http"
-	"github.com/stealthrocket/net/wasip1"
 	ws "nhooyr.io/websocket"
+
+	_ "github.com/goccy/go-wasi-net/http"
+	"github.com/goccy/go-wasi-net/wasip1"
 )
 
 func TestWebSocket(t *testing.T) {

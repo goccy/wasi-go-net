@@ -1,4 +1,4 @@
-module github.com/stealthrocket/net/ttrpc
+module github.com/goccy/go-wasi-net/ttrpc
 
 go 1.21
 

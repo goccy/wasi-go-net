@@ -1,10 +1,10 @@
-module github.com/stealthrocket/net/redis
+module github.com/goccy/go-wasi-net/redis
 
 go 1.21
 
 require (
 	github.com/redis/go-redis/v9 v9.0.5
-	github.com/stealthrocket/net v0.1.2
+	github.com/goccy/go-wasi-net v0.1.2
 )
 
 require (

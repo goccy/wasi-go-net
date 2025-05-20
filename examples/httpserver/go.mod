@@ -1,5 +1,5 @@
-module github.com/stealthrocket/net/examples/httpserver
+module github.com/goccy/go-wasi-net/examples/httpserver
 
 go 1.21
 
-require github.com/stealthrocket/net v0.2.1
+require github.com/goccy/go-wasi-net v0.2.1
