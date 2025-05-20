@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-option go_package = "github.com/goccy/go-wasi-net/ttrpc";
+option go_package = "github.com/goccy/wasi-go-net/ttrpc";
 
 package ttrpc;
 

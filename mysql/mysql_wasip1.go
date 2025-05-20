@@ -8,7 +8,7 @@ import (
 
 	"github.com/go-sql-driver/mysql"
 
-	"github.com/goccy/go-wasi-net/wasip1"
+	"github.com/goccy/wasi-go-net/wasip1"
 )
 
 func init() {

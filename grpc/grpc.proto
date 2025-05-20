@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-option go_package = "github.com/goccy/go-wasi-net/grpc";
+option go_package = "github.com/goccy/wasi-go-net/grpc";
 
 package grpc;
 

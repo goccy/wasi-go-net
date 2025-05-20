@@ -11,8 +11,8 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 
-	pb "github.com/goccy/go-wasi-net/grpc"
-	"github.com/goccy/go-wasi-net/wasip1"
+	pb "github.com/goccy/wasi-go-net/grpc"
+	"github.com/goccy/wasi-go-net/wasip1"
 )
 
 type helloService struct {

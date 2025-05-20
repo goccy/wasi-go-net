@@ -1,5 +1,5 @@
-[![Build](https://github.com/goccy/go-wasi-net/actions/workflows/build.yml/badge.svg)](https://github.com/goccy/go-wasi-net/actions/workflows/build.yml)
-[![Go Reference](https://pkg.go.dev/badge/github.com/goccy/go-wasi-net.svg)](https://pkg.go.dev/github.com/goccy/go-wasi-net)
+[![Build](https://github.com/goccy/wasi-go-net/actions/workflows/build.yml/badge.svg)](https://github.com/goccy/wasi-go-net/actions/workflows/build.yml)
+[![Go Reference](https://pkg.go.dev/badge/github.com/goccy/wasi-go-net.svg)](https://pkg.go.dev/github.com/goccy/wasi-go-net)
 [![Apache 2 License](https://img.shields.io/badge/license-Apache%202-blue.svg)](LICENSE)
 
 > ![IMPORTANT]
@@ -41,10 +41,10 @@ network stack via `init` functions called on package imports. This model is
 currently supported for `http` and `mysql` with those imports:
 
 ```go
-import _ "github.com/goccy/go-wasi-net/http"
+import _ "github.com/goccy/wasi-go-net/http"
 ```
 ```go
-import _ "github.com/goccy/go-wasi-net/mysql"
+import _ "github.com/goccy/wasi-go-net/mysql"
 ```
 
 When imported, those packages alter the default configuration to install a
@@ -84,7 +84,7 @@ first constructing a listener and passing it to the server's `Serve` method:
 import (
     "net/http"
 
-    "github.com/goccy/go-wasi-net/wasip1"
+    "github.com/goccy/wasi-go-net/wasip1"
 )
 
 func main() {
@@ -116,7 +116,7 @@ The pure Go name resolver is the default for `GOOS=wasip1`.
 All you need is the following import somewhere in your application:
 
 ```go
-import _ "github.com/goccy/go-wasi-net/wasip1"
+import _ "github.com/goccy/wasi-go-net/wasip1"
 ```
 
 The library will then automatically configure the `net.DefaultResolver`.

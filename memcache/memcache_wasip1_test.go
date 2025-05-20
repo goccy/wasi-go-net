@@ -7,7 +7,7 @@ import (
 
 	"github.com/bradfitz/gomemcache/memcache"
 
-	"github.com/goccy/go-wasi-net/wasip1"
+	"github.com/goccy/wasi-go-net/wasip1"
 )
 
 func TestMemcache(t *testing.T) {

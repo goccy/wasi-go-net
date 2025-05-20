@@ -8,7 +8,7 @@ import (
 
 	"github.com/redis/go-redis/v9"
 
-	"github.com/goccy/go-wasi-net/wasip1"
+	"github.com/goccy/wasi-go-net/wasip1"
 )
 
 func TestRedis(t *testing.T) {

@@ -5,7 +5,7 @@ package http
 import (
 	"net/http"
 
-	"github.com/goccy/go-wasi-net/wasip1"
+	"github.com/goccy/wasi-go-net/wasip1"
 )
 
 func init() {

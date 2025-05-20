@@ -10,7 +10,7 @@ import (
 
 	"golang.org/x/net/nettest"
 
-	"github.com/goccy/go-wasi-net/wasip1"
+	"github.com/goccy/wasi-go-net/wasip1"
 )
 
 func TestConn(t *testing.T) {

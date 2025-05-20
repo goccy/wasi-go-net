@@ -1,10 +1,10 @@
-module github.com/goccy/go-wasi-net/ttrpc
+module github.com/goccy/wasi-go-net/ttrpc
 
 go 1.21
 
 require (
 	github.com/containerd/ttrpc v1.2.2
-	github.com/stealthrocket/net v0.1.2
+	github.com/goccy/wasi-go-net v0.1.0
 	google.golang.org/protobuf v1.33.0
 )
 

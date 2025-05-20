@@ -5,7 +5,7 @@
 // This package is intended to be imported as a nameless package with:
 //
 //	import (
-//		_ "github.com/goccy/go-wasi-net/http"
+//		_ "github.com/goccy/wasi-go-net/http"
 //	)
 //
 // Note that only the default transport (http.DefaultTransport) can be altered,

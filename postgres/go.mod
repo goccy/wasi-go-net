@@ -1,10 +1,10 @@
-module github.com/goccy/go-wasi-net/postgres
+module github.com/goccy/wasi-go-net/postgres
 
 go 1.21
 
 require (
 	github.com/jackc/pgx/v5 v5.5.4
-	github.com/goccy/go-wasi-net v0.1.3-0.20230609185417-24d7c1a5dd46
+	github.com/goccy/wasi-go-net v0.1.1
 )
 
 require (

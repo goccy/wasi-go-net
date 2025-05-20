@@ -4,7 +4,7 @@
 // This package is intended to be imported as a nameless package with:
 //
 //	import (
-//		_ "github.com/goccy/go-wasi-net/mysql"
+//		_ "github.com/goccy/wasi-go-net/mysql"
 //	)
 //
 // The package is distributed as a separate module so only applications which

@@ -1,4 +1,4 @@
-module github.com/goccy/go-wasi-net
+module github.com/goccy/wasi-go-net
 
 go 1.21
 
