@@ -6,7 +6,7 @@
 > This project is a fork of github.com/stealthrocket/net. To use it, you need to add a replace directive to your go.mod by the following command.
 
 ```
-go mod edit -replace github.com/stealthrocket/net=github.com/goccy/wasi-go-net
+go mod edit -replace github.com/stealthrocket/net=github.com/goccy/wasi-go-net@main
 ```
 
 # net
