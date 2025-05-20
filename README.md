@@ -2,6 +2,13 @@
 [![Go Reference](https://pkg.go.dev/badge/github.com/stealthrocket/net.svg)](https://pkg.go.dev/github.com/stealthrocket/net)
 [![Apache 2 License](https://img.shields.io/badge/license-Apache%202-blue.svg)](LICENSE)
 
+> ![IMPORTANT]
+> This project is a fork of github.com/stealthrocket/net. To use it, you need to add a replace directive to your go.mod by the following command.
+
+```
+go mod edit -replace github.com/stealthrocket/net=github.com/goccy/wasi-go-net
+```
+
 # net
 
 This library provides `net.Dial` and `net.Listen` functions for
@@ -120,13 +127,3 @@ The library will then automatically configure the `net.DefaultResolver`.
 
 You'll then be able to use the lookup functions from the standard
 library (e.g. `net.LookupIP(host)`).
-
-### getaddrinfo
-
-The `sock_getaddrinfo` host function is used to implement name resolution.
-To use this method, compile the library with the `getaddrinfo` build tag.
-
-When using this method, the standard library resolver **will not work**; you
-cannot use `net.DefaultResolver`, `net.LookupIP`, etc.
-
-Note that `sock_getaddrinfo` may block.

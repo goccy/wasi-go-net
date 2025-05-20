@@ -1,4 +1,4 @@
-//go:build wasip1 && getaddrinfo
+//go:build wasip1
 
 package wasip1
 
