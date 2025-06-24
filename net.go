@@ -41,7 +41,27 @@ func GetReplacedNetSources(ctx context.Context) ([]*ReplacedNetSource, error) {
 	paths := findSourcePaths(
 		netPkgFiles,
 		func(decl *ast.FuncDecl) bool {
-			return decl.Name.Name == "DialContext" && decl.Recv != nil
+			if decl.Name.Name != "DialContext" {
+				return false
+			}
+			if decl.Recv == nil {
+				return false
+			}
+			if len(decl.Recv.List) == 0 {
+				return false
+			}
+			if len(decl.Recv.List[0].Names) == 0 {
+				return false
+			}
+			star, ok := decl.Recv.List[0].Type.(*ast.StarExpr)
+			if !ok {
+				return false
+			}
+			ident, ok := star.X.(*ast.Ident)
+			if !ok {
+				return false
+			}
+			return ident.Name == "Dialer"
 		},
 		func(decl *ast.FuncDecl) bool {
 			return decl.Name.Name == "Listen" && decl.Recv == nil
