@@ -18,9 +18,21 @@ import (
 	"strings"
 )
 
+type Option func(*option)
+
+type option struct {
+	goPath string
+}
+
+func WithGoCommandPath(path string) Option {
+	return func(opt *option) {
+		opt.goPath = path
+	}
+}
+
 // CreateReplacedNetPkgOverlayFile create an Overlay file to replace net.Listen and net.Dialer.DialContext with functions from wasi-go-net.
-func CreateReplacedNetPkgOverlayFile(ctx context.Context) (*OverlayFile, error) {
-	srcs, err := GetReplacedNetSources(ctx)
+func CreateReplacedNetPkgOverlayFile(ctx context.Context, opts ...Option) (*OverlayFile, error) {
+	srcs, err := GetReplacedNetSources(ctx, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -33,8 +45,12 @@ type ReplacedNetSource struct {
 }
 
 // GetReplacedNetSources return the source code after replacing net.Listen and net.Dialer.DialContext with functions from wasi-go-net.
-func GetReplacedNetSources(ctx context.Context) ([]*ReplacedNetSource, error) {
-	netPkgFiles, err := netPkgGoFiles(ctx)
+func GetReplacedNetSources(ctx context.Context, opts ...Option) ([]*ReplacedNetSource, error) {
+	o := &option{}
+	for _, opt := range opts {
+		opt(o)
+	}
+	netPkgFiles, err := netPkgGoFiles(ctx, o)
 	if err != nil {
 		return nil, err
 	}
@@ -139,8 +155,8 @@ func CreateOverlayFile(srcs ...*ReplacedNetSource) (*OverlayFile, error) {
 	}, nil
 }
 
-func netPkgGoFiles(ctx context.Context) ([]string, error) {
-	dir, err := netPkgDir(ctx)
+func netPkgGoFiles(ctx context.Context, opt *option) ([]string, error) {
+	dir, err := netPkgDir(ctx, opt)
 	if err != nil {
 		return nil, err
 	}
@@ -163,8 +179,18 @@ func netPkgGoFiles(ctx context.Context) ([]string, error) {
 	return ret, nil
 }
 
-func netPkgDir(ctx context.Context) (string, error) {
-	out, err := exec.CommandContext(ctx, "go", "env", "GOROOT").CombinedOutput()
+func netPkgDir(ctx context.Context, opt *option) (string, error) {
+	var goPath string
+	if opt.goPath != "" {
+		goPath = opt.goPath
+	} else {
+		goCmd, err := exec.LookPath("go")
+		if err != nil {
+			return "", fmt.Errorf("failed to find go binary path: %w", err)
+		}
+		goPath = goCmd
+	}
+	out, err := exec.CommandContext(ctx, goPath, "env", "GOROOT").CombinedOutput()
 	if err != nil {
 		return string(out), fmt.Errorf("failed to get GOROOT: %w", err)
 	}
