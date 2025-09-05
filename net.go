@@ -16,6 +16,7 @@ import (
 	"path/filepath"
 	"sort"
 	"strings"
+	"sync"
 )
 
 type Option func(*option)
@@ -30,31 +31,33 @@ func WithGoCommandPath(path string) Option {
 	}
 }
 
-// CreateReplacedNetPkgOverlayFile create an Overlay file to replace net.Listen and net.Dialer.DialContext with functions from wasi-go-net.
-func CreateReplacedNetPkgOverlayFile(ctx context.Context, opts ...Option) (*OverlayFile, error) {
-	srcs, err := GetReplacedNetSources(ctx, opts...)
+// CreateReplacedNetworkingPkgOverlayFile create an Overlay file to replace net.Listen and net.Dialer.DialContext with functions from wasi-go-net.
+func CreateReplacedNetworkingPkgOverlayFile(ctx context.Context, opts ...Option) (*OverlayFile, error) {
+	srcs, err := GetReplacedNetworkingSources(ctx, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return CreateOverlayFile(srcs...)
 }
 
-type ReplacedNetSource struct {
+type ReplacedNetworkingSource struct {
 	Path    string
 	Content []byte
 }
 
-// GetReplacedNetSources return the source code after replacing net.Listen and net.Dialer.DialContext with functions from wasi-go-net.
-func GetReplacedNetSources(ctx context.Context, opts ...Option) ([]*ReplacedNetSource, error) {
+// GetReplacedNetworkingSources return the source code after replacing net.Listen, net.Dialer.DialContext and crypto/x509.Certificate.Verify with functions from wasi-go-net.
+func GetReplacedNetworkingSources(ctx context.Context, opts ...Option) ([]*ReplacedNetworkingSource, error) {
 	o := &option{}
 	for _, opt := range opts {
 		opt(o)
 	}
+
+	// Get net package sources
 	netPkgFiles, err := netPkgGoFiles(ctx, o)
 	if err != nil {
 		return nil, err
 	}
-	paths := findSourcePaths(
+	netPaths := findSourcePaths(
 		netPkgFiles,
 		func(decl *ast.FuncDecl) bool {
 			if decl.Name.Name != "DialContext" {
@@ -83,20 +86,76 @@ func GetReplacedNetSources(ctx context.Context, opts ...Option) ([]*ReplacedNetS
 			return decl.Name.Name == "Listen" && decl.Recv == nil
 		},
 	)
-	if len(paths) == 0 {
-		return nil, errors.New("failed to find net package source files")
+
+	// Get crypto/x509 package sources
+	x509PkgFiles, err := x509PkgGoFiles(ctx, o)
+	if err != nil {
+		return nil, err
+	}
+	x509Paths := findSourcePaths(
+		x509PkgFiles,
+		func(decl *ast.FuncDecl) bool {
+			if decl.Name.Name != "Verify" {
+				return false
+			}
+			if decl.Recv == nil {
+				return false
+			}
+			if len(decl.Recv.List) == 0 {
+				return false
+			}
+			star, ok := decl.Recv.List[0].Type.(*ast.StarExpr)
+			if !ok {
+				return false
+			}
+			ident, ok := star.X.(*ast.Ident)
+			if !ok {
+				return false
+			}
+			return ident.Name == "Certificate"
+		},
+	)
+
+	allPaths := append(netPaths, x509Paths...)
+	if len(allPaths) == 0 {
+		return nil, errors.New("failed to find net or crypto/x509 package source files")
 	}
 
-	ret := make([]*ReplacedNetSource, 0, len(paths))
-	for _, path := range paths {
-		content, err := createReplacedNetSource(path)
+	ret := make([]*ReplacedNetworkingSource, 0, len(allPaths))
+
+	var x509RootOnce sync.Once
+	for _, path := range allPaths {
+		var (
+			content []byte
+			err     error
+		)
+		if strings.Contains(path, "/net/") {
+			content, err = createReplacedNetSource(path)
+		} else if strings.Contains(path, "/crypto/x509/") {
+			content, err = createReplacedX509Source(path)
+		} else {
+			continue
+		}
 		if err != nil {
 			return nil, err
 		}
-		ret = append(ret, &ReplacedNetSource{
+		ret = append(ret, &ReplacedNetworkingSource{
 			Path:    path,
 			Content: content,
 		})
+		if strings.Contains(path, "/crypto/x509/") {
+			x509RootOnce.Do(func() {
+				x509RootContent, err := createX509RootWasip1File()
+				if err != nil {
+					return
+				}
+				x509RootPath := filepath.Join(filepath.Dir(path), "root_wasip1.go")
+				ret = append(ret, &ReplacedNetworkingSource{
+					Path:    x509RootPath,
+					Content: x509RootContent,
+				})
+			})
+		}
 	}
 	return ret, nil
 }
@@ -118,7 +177,7 @@ func (f *OverlayFile) Close() {
 }
 
 // CreateOverlayFile create an overlay file from the source code where net.Listen and net.Dialer.DialContext have been replaced.
-func CreateOverlayFile(srcs ...*ReplacedNetSource) (*OverlayFile, error) {
+func CreateOverlayFile(srcs ...*ReplacedNetworkingSource) (*OverlayFile, error) {
 	tmpFilePaths := make([]string, 0, len(srcs))
 	overlayMap := make(map[string]string)
 	for _, src := range srcs {
@@ -180,6 +239,46 @@ func netPkgGoFiles(ctx context.Context, opt *option) ([]string, error) {
 }
 
 func netPkgDir(ctx context.Context, opt *option) (string, error) {
+	goroot, err := getGoroot(ctx, opt)
+	if err != nil {
+		return "", err
+	}
+	return filepath.Join(goroot, "src", "net"), nil
+}
+
+func x509PkgGoFiles(ctx context.Context, opt *option) ([]string, error) {
+	dir, err := x509PkgDir(ctx, opt)
+	if err != nil {
+		return nil, err
+	}
+	var ret []string
+	_ = filepath.Walk(dir, func(path string, info fs.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+		if info.IsDir() || filepath.Ext(info.Name()) != ".go" {
+			return nil
+		}
+
+		if strings.HasSuffix(info.Name(), "_test.go") {
+			return nil
+		}
+
+		ret = append(ret, path)
+		return nil
+	})
+	return ret, nil
+}
+
+func x509PkgDir(ctx context.Context, opt *option) (string, error) {
+	goroot, err := getGoroot(ctx, opt)
+	if err != nil {
+		return "", err
+	}
+	return filepath.Join(goroot, "src", "crypto", "x509"), nil
+}
+
+func getGoroot(ctx context.Context, opt *option) (string, error) {
 	var goPath string
 	if opt.goPath != "" {
 		goPath = opt.goPath
@@ -194,8 +293,7 @@ func netPkgDir(ctx context.Context, opt *option) (string, error) {
 	if err != nil {
 		return string(out), fmt.Errorf("failed to get GOROOT: %w", err)
 	}
-	goroot := strings.TrimSpace(string(out))
-	return filepath.Join(goroot, "src", "net"), nil
+	return strings.TrimSpace(string(out)), nil
 }
 
 func findSourcePaths(netPkgFiles []string, matchers ...func(*ast.FuncDecl) bool) []string {
@@ -438,4 +536,217 @@ func createReplacedNetSource(path string) ([]byte, error) {
 	}
 
 	return buf.Bytes(), nil
+}
+
+func createReplacedX509Source(path string) ([]byte, error) {
+	src, err := os.ReadFile(path)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read file %s: %w", path, err)
+	}
+
+	fset := token.NewFileSet()
+	astFile, err := parser.ParseFile(fset, filepath.Base(path), src, 0)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse file %s: %w", path, err)
+	}
+
+	hasUnsafeImport := false
+	for _, imp := range astFile.Imports {
+		if imp.Path.Value == `"unsafe"` {
+			hasUnsafeImport = true
+			break
+		}
+	}
+
+	if !hasUnsafeImport {
+		unsafeImport := &ast.ImportSpec{
+			Name: &ast.Ident{Name: "_"},
+			Path: &ast.BasicLit{Kind: token.STRING, Value: `"unsafe"`},
+		}
+		astFile.Imports = append(astFile.Imports, unsafeImport)
+
+		var lastImportDecl *ast.GenDecl
+		for _, decl := range astFile.Decls {
+			if genDecl, ok := decl.(*ast.GenDecl); ok && genDecl.Tok == token.IMPORT {
+				lastImportDecl = genDecl
+			}
+		}
+
+		if lastImportDecl != nil {
+			lastImportDecl.Specs = append(lastImportDecl.Specs, unsafeImport)
+		} else {
+			importDecl := &ast.GenDecl{
+				Tok:   token.IMPORT,
+				Specs: []ast.Spec{unsafeImport},
+			}
+			astFile.Decls = append([]ast.Decl{importDecl}, astFile.Decls...)
+		}
+	}
+
+	foundVerify := false
+
+	for _, decl := range astFile.Decls {
+		if funcDecl, ok := decl.(*ast.FuncDecl); ok {
+			if funcDecl.Name.Name == "Verify" && funcDecl.Recv != nil {
+				if len(funcDecl.Recv.List) > 0 {
+					if star, ok := funcDecl.Recv.List[0].Type.(*ast.StarExpr); ok {
+						if ident, ok := star.X.(*ast.Ident); ok && ident.Name == "Certificate" {
+							foundVerify = true
+
+							funcDecl.Name = &ast.Ident{Name: "verify"}
+
+							newVerifyFunc := &ast.FuncDecl{
+								Recv: funcDecl.Recv,
+								Name: &ast.Ident{Name: "Verify"},
+								Type: funcDecl.Type,
+								Body: &ast.BlockStmt{
+									List: []ast.Stmt{
+										&ast.IfStmt{
+											Cond: &ast.BinaryExpr{
+												X: &ast.SelectorExpr{
+													X:   &ast.Ident{Name: "runtime"},
+													Sel: &ast.Ident{Name: "GOOS"},
+												},
+												Op: token.NEQ,
+												Y:  &ast.BasicLit{Kind: token.STRING, Value: `"wasip1"`},
+											},
+											Body: &ast.BlockStmt{
+												List: []ast.Stmt{
+													&ast.ReturnStmt{
+														Results: []ast.Expr{
+															&ast.CallExpr{
+																Fun: &ast.SelectorExpr{
+																	X:   &ast.Ident{Name: "c"},
+																	Sel: &ast.Ident{Name: "verify"},
+																},
+																Args: []ast.Expr{
+																	&ast.Ident{Name: "opts"},
+																},
+															},
+														},
+													},
+												},
+											},
+										},
+										&ast.ReturnStmt{
+											Results: []ast.Expr{
+												&ast.CallExpr{
+													Fun: &ast.SelectorExpr{
+														X:   &ast.Ident{Name: "c"},
+														Sel: &ast.Ident{Name: "systemVerifyWasip1"},
+													},
+													Args: []ast.Expr{
+														&ast.UnaryExpr{
+															Op: token.AND,
+															X:  &ast.Ident{Name: "opts"},
+														},
+													},
+												},
+											},
+										},
+									},
+								},
+							}
+
+							for i, d := range astFile.Decls {
+								if d == funcDecl {
+									astFile.Decls[i] = newVerifyFunc
+									astFile.Decls = append(astFile.Decls, funcDecl)
+									break
+								}
+							}
+							break
+						}
+					}
+				}
+			}
+		}
+	}
+
+	if !foundVerify {
+		return nil, fmt.Errorf("no target Certificate.Verify function found in %s", path)
+	}
+
+	hasRuntimeImport := false
+	for _, imp := range astFile.Imports {
+		if imp.Path.Value == `"runtime"` {
+			hasRuntimeImport = true
+			break
+		}
+	}
+
+	if !hasRuntimeImport {
+		runtimeImport := &ast.ImportSpec{
+			Path: &ast.BasicLit{Kind: token.STRING, Value: `"runtime"`},
+		}
+		astFile.Imports = append(astFile.Imports, runtimeImport)
+
+		var lastImportDecl *ast.GenDecl
+		for _, decl := range astFile.Decls {
+			if genDecl, ok := decl.(*ast.GenDecl); ok && genDecl.Tok == token.IMPORT {
+				lastImportDecl = genDecl
+			}
+		}
+
+		if lastImportDecl != nil {
+			lastImportDecl.Specs = append(lastImportDecl.Specs, runtimeImport)
+		}
+	}
+
+	var buf bytes.Buffer
+	if err := format.Node(&buf, fset, astFile); err != nil {
+		return nil, fmt.Errorf("failed to format AST: %w", err)
+	}
+
+	return buf.Bytes(), nil
+}
+
+func createX509RootWasip1File() ([]byte, error) {
+	content := `//go:build wasip1
+
+package x509
+
+import (
+	"fmt"
+	_ "unsafe"
+)
+
+//go:linkname wasip1_verify_certification github.com/goccy/wasi-go-net/wasip1.VerifyCertification
+func wasip1_verify_certification([][]byte, string) error
+
+func (c *Certificate) systemVerifyWasip1(opts *VerifyOptions) (chains [][]*Certificate, err error) {
+	if len(c.Raw) == 0 {
+		return nil, errNotParsed
+	}
+	for i := 0; i < opts.Intermediates.len(); i++ {
+		c, _, err := opts.Intermediates.cert(i)
+		if err != nil {
+			return nil, fmt.Errorf("crypto/x509: error fetching intermediate: %w", err)
+		}
+		if len(c.Raw) == 0 {
+			return nil, errNotParsed
+		}
+	}
+	var chain [][]byte
+	chain = append(chain, c.Raw)
+	if opts != nil && opts.Intermediates != nil {
+		for _, lc := range opts.Intermediates.lazyCerts {
+			c, err := lc.getCert()
+			if err != nil {
+				return nil, err
+			}
+			chain = append(chain, c.Raw)
+		}
+	}
+	var dnsName string
+	if opts != nil {
+		dnsName = opts.DNSName
+	}
+	if err := wasip1_verify_certification(chain, dnsName); err != nil {
+		return nil, err
+	}
+	return [][]*Certificate{{c}}, nil
+}
+`
+	return []byte(content), nil
 }

@@ -2,13 +2,14 @@ package net
 
 import (
 	"os"
+	"strings"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
 )
 
-func TestCreateReplacedNetPkgOverlayFile(t *testing.T) {
-	f, err := CreateReplacedNetPkgOverlayFile(t.Context())
+func TestCreateReplacedNetworkingPkgOverlayFile(t *testing.T) {
+	f, err := CreateReplacedNetworkingPkgOverlayFile(t.Context())
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -312,5 +313,113 @@ func _dialContext(ctx context.Context, network string, address string) (Conn, er
 				t.Errorf("(-got, +want)\n%s", diff)
 			}
 		})
+	}
+}
+
+func TestCreateReplacedX509Source(t *testing.T) {
+	tests := map[string]struct {
+		source   string
+		expected string
+	}{
+		"verify": {
+			source: `
+package x509
+
+import (
+	"context"
+	"crypto"
+	"time"
+)
+
+type Certificate struct {
+	Raw []byte
+}
+
+type VerifyOptions struct {
+	DNSName string
+	Intermediates *CertPool
+}
+
+func (c *Certificate) Verify(opts VerifyOptions) (chains [][]*Certificate, err error) {
+	// Original implementation
+	return nil, nil
+}
+`,
+			expected: `package x509
+
+import (
+	"context"
+	"crypto"
+	"runtime"
+	"time"
+	_ "unsafe"
+)
+
+type Certificate struct {
+	Raw []byte
+}
+
+type VerifyOptions struct {
+	DNSName       string
+	Intermediates *CertPool
+}
+
+func (c *Certificate) Verify(opts VerifyOptions) (chains [][]*Certificate, err error) {
+	if runtime.GOOS != "wasip1" {
+		return c.verify(opts)
+	}
+	return c.systemVerifyWasip1(&opts)
+}
+func (c *Certificate) verify(opts VerifyOptions) (chains [][]*Certificate, err error) {
+
+	return nil, nil
+}
+`,
+		},
+	}
+
+	for name, test := range tests {
+		t.Run(name, func(t *testing.T) {
+			tmpFile, err := os.CreateTemp("", "")
+			if err != nil {
+				t.Fatalf("failed to create temp file: %v", err)
+			}
+			defer os.Remove(tmpFile.Name())
+
+			if _, err := tmpFile.WriteString(test.source); err != nil {
+				t.Fatalf("failed to write source code: %v", err)
+			}
+			tmpFile.Close()
+
+			replacedSrc, err := createReplacedX509Source(tmpFile.Name())
+			if err != nil {
+				t.Fatal(err)
+			}
+			if diff := cmp.Diff(string(replacedSrc), test.expected); diff != "" {
+				t.Errorf("(-got, +want)\n%s", diff)
+			}
+		})
+	}
+}
+
+func TestCreateRootWasip1File(t *testing.T) {
+	content, err := createX509RootWasip1File()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if len(content) == 0 {
+		t.Fatal("createRootWasip1File should return non-empty content")
+	}
+
+	contentStr := string(content)
+	if !strings.Contains(contentStr, "//go:build wasip1") {
+		t.Error("should contain wasip1 build constraint")
+	}
+	if !strings.Contains(contentStr, "package x509") {
+		t.Error("should contain x509 package declaration")
+	}
+	if !strings.Contains(contentStr, "systemVerifyWasip1") {
+		t.Error("should contain systemVerify method")
 	}
 }
