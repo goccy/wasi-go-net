@@ -1,5 +1,5 @@
-github.com/goccy/wasi-go v0.2.1-0.20250905100741-14f274fee5fb h1:eVZ3GDnhUVKrjq+xC9STzP/FJiSEGarPGFOmfGhE+nc=
-github.com/goccy/wasi-go v0.2.1-0.20250905100741-14f274fee5fb/go.mod h1:D/O2skTFpoIj60E8oD8kQeYdOFIw2UPBARPCw/t0Y6s=
+github.com/goccy/wasi-go v0.2.1-0.20250906043148-b712f48c2c25 h1:rY+FLqKbdn4D/eltGABXNIXg7uaGCIPXzBwY0OymoyY=
+github.com/goccy/wasi-go v0.2.1-0.20250906043148-b712f48c2c25/go.mod h1:D/O2skTFpoIj60E8oD8kQeYdOFIw2UPBARPCw/t0Y6s=
 github.com/google/go-cmp v0.7.0 h1:wk8382ETsv4JYUZwIsn6YpYiWiBsYLSJiTsyBybVuN8=
 github.com/google/go-cmp v0.7.0/go.mod h1:pXiqmnSA92OHEEa9HXL2W4E7lf9JzCmGVUdgjX3N/iU=
 github.com/tetratelabs/wazero v1.9.0 h1:IcZ56OuxrtaEz8UYNRHBrUa9bYeX9oVY93KspZZBf/I=

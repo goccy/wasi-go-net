@@ -3,6 +3,7 @@ package net
 import (
 	"bytes"
 	"context"
+	_ "embed"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -44,6 +45,9 @@ type ReplacedNetworkingSource struct {
 	Path    string
 	Content []byte
 }
+
+//go:embed x509_root_wasip1.go.tmpl
+var x509RootWasip1Tmpl []byte
 
 // GetReplacedNetworkingSources return the source code after replacing net.Listen, net.Dialer.DialContext and crypto/x509.Certificate.Verify with functions from wasi-go-net.
 func GetReplacedNetworkingSources(ctx context.Context, opts ...Option) ([]*ReplacedNetworkingSource, error) {
@@ -145,14 +149,10 @@ func GetReplacedNetworkingSources(ctx context.Context, opts ...Option) ([]*Repla
 		})
 		if strings.Contains(path, "/crypto/x509/") {
 			x509RootOnce.Do(func() {
-				x509RootContent, err := createX509RootWasip1File()
-				if err != nil {
-					return
-				}
 				x509RootPath := filepath.Join(filepath.Dir(path), "root_wasip1.go")
 				ret = append(ret, &ReplacedNetworkingSource{
 					Path:    x509RootPath,
-					Content: x509RootContent,
+					Content: x509RootWasip1Tmpl,
 				})
 			})
 		}
@@ -699,54 +699,4 @@ func createReplacedX509Source(path string) ([]byte, error) {
 	}
 
 	return buf.Bytes(), nil
-}
-
-func createX509RootWasip1File() ([]byte, error) {
-	content := `//go:build wasip1
-
-package x509
-
-import (
-	"fmt"
-	_ "unsafe"
-)
-
-//go:linkname wasip1_verify_certification github.com/goccy/wasi-go-net/wasip1.VerifyCertification
-func wasip1_verify_certification([][]byte, string) error
-
-func (c *Certificate) systemVerifyWasip1(opts *VerifyOptions) (chains [][]*Certificate, err error) {
-	if len(c.Raw) == 0 {
-		return nil, errNotParsed
-	}
-	for i := 0; i < opts.Intermediates.len(); i++ {
-		c, _, err := opts.Intermediates.cert(i)
-		if err != nil {
-			return nil, fmt.Errorf("crypto/x509: error fetching intermediate: %w", err)
-		}
-		if len(c.Raw) == 0 {
-			return nil, errNotParsed
-		}
-	}
-	var chain [][]byte
-	chain = append(chain, c.Raw)
-	if opts != nil && opts.Intermediates != nil {
-		for _, lc := range opts.Intermediates.lazyCerts {
-			c, err := lc.getCert()
-			if err != nil {
-				return nil, err
-			}
-			chain = append(chain, c.Raw)
-		}
-	}
-	var dnsName string
-	if opts != nil {
-		dnsName = opts.DNSName
-	}
-	if err := wasip1_verify_certification(chain, dnsName); err != nil {
-		return nil, err
-	}
-	return [][]*Certificate{{c}}, nil
-}
-`
-	return []byte(content), nil
 }

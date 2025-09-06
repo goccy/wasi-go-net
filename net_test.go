@@ -2,7 +2,6 @@ package net
 
 import (
 	"os"
-	"strings"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -399,27 +398,5 @@ func (c *Certificate) verify(opts VerifyOptions) (chains [][]*Certificate, err e
 				t.Errorf("(-got, +want)\n%s", diff)
 			}
 		})
-	}
-}
-
-func TestCreateRootWasip1File(t *testing.T) {
-	content, err := createX509RootWasip1File()
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	if len(content) == 0 {
-		t.Fatal("createRootWasip1File should return non-empty content")
-	}
-
-	contentStr := string(content)
-	if !strings.Contains(contentStr, "//go:build wasip1") {
-		t.Error("should contain wasip1 build constraint")
-	}
-	if !strings.Contains(contentStr, "package x509") {
-		t.Error("should contain x509 package declaration")
-	}
-	if !strings.Contains(contentStr, "systemVerifyWasip1") {
-		t.Error("should contain systemVerify method")
 	}
 }

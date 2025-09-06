@@ -37,10 +37,12 @@ func wasip1_free(p uint32) {
 //go:wasmimport wasi_go_net verify_certification
 func verify_certification(uint32, uint32, uint32, uint32)
 
-func VerifyCertification(chain [][]byte, serverName string) error {
+func VerifyCertification(dnsName string, leaf []byte, roots, intermediates [][]byte) error {
 	b, err := json.Marshal(&net.VerifyOptions{
-		Chain:   chain,
-		DNSName: serverName,
+		DNSName:       dnsName,
+		Leaf:          leaf,
+		Roots:         roots,
+		Intermediates: intermediates,
 	})
 	if err != nil {
 		return err
